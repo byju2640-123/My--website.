@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Loan App</title>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const supabaseUrl = "https://cserhbafuyzvvlykmpgf.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzZXJoYmFmdXl6dnZseWttcGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMjA3MTQsImV4cCI6MjA5MjU5NjcxNH0.WbaltD6pcXj7jdYl8Fx3qKJY7Z1H2KVro_lh58LS9Pc";
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    async function loadSummary() {
+      const { data, error } = await supabase
+        .from('loan_summary')
+        .select('*');
+
+      if (error) {
+        document.body.innerHTML = "Error: " + error.message;
+        return;
+      }
+
+      let output = "<h1>Loan Summary</h1>";
+
+      data.forEach(row => {
+        output += `
+          <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+            <h3>${row.borrower_name}</h3>
+            <p>Balance: ₹${row.balance}</p>
+          </div>
+        `;
+      });
+
+      document.body.innerHTML = output;
+    }
+
+    loadSummary();
+  </script>
+</head>
+<body>
+  Loading...
+</body>
+</html>
