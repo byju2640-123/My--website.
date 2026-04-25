@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Loan App</title>
+  <title>Loan Accounting Book</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
@@ -10,34 +12,64 @@
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    async function loadSummary() {
-      const { data, error } = await supabase
-        .from('loan_summary')
-        .select('*');
+    function monthsBetween(dateStr) {
+      const start = new Date(dateStr);
+      const now = new Date();
+      return Math.max(1, (now - start) / (1000 * 60 * 60 * 24 * 30));
+    }
+
+    function calcInterest(amount, rate, months) {
+      return (amount * rate * months) / 100;
+    }
+
+    async function loadData() {
+      const { data, error } = await supabase.from('loan_summary').select('*');
 
       if (error) {
         document.body.innerHTML = "Error: " + error.message;
         return;
       }
 
-      let output = "<h1>Loan Summary</h1>";
+      let html = `
+        <div style="font-family:Arial;padding:15px;background:#f4f4f4;">
+          <h2>📒 Loan Accounting Book</h2>
+      `;
 
-      data.forEach(row => {
-        output += `
-          <div style="border:1px solid #ccc; padding:10px; margin:10px;">
-            <h3>${row.borrower_name}</h3>
-            <p>Balance: ₹${row.balance}</p>
+      data.forEach(item => {
+
+        let months = monthsBetween(item.loan_date);
+        let interest = calcInterest(item.amount, item.interest_rate, months);
+        let balance = item.amount + interest - (item.total_paid || 0);
+
+        html += `
+          <div style="background:white;padding:12px;margin:10px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1)">
+            
+            <h3>👤 ${item.borrower_name}</h3>
+            
+            <p>📅 Loan Date: ${item.loan_date}</p>
+            <p>💰 Loan Amount: ₹${item.amount}</p>
+            <p>📈 Interest Rate: ${item.interest_rate}% / month</p>
+            
+            <p>📊 Interest: ₹${interest.toFixed(2)}</p>
+            <p>💸 Total Paid: ₹${item.total_paid || 0}</p>
+
+            <hr>
+
+            <h3>⚖ Balance: ₹${balance.toFixed(2)}</h3>
+
           </div>
         `;
       });
 
-      document.body.innerHTML = output;
+      html += `</div>`;
+      document.body.innerHTML = html;
     }
 
-    loadSummary();
+    loadData();
   </script>
 </head>
+
 <body>
-  Loading...
+  Loading Loan Data...
 </body>
 </html>
