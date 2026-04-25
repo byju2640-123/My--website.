@@ -13,20 +13,26 @@
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     function monthsBetween(dateStr) {
+      if (!dateStr) return 1;
       const start = new Date(dateStr);
       const now = new Date();
-      return Math.max(1, (now - start) / (1000 * 60 * 60 * 24 * 30));
+      let diff = (now - start) / (1000 * 60 * 60 * 24 * 30);
+      return diff > 0 ? diff : 1;
+    }
+
+    function safe(num) {
+      return isNaN(num) || num == null ? 0 : Number(num);
     }
 
     function calcInterest(amount, rate, months) {
-      return (amount * rate * months) / 100;
+      return (safe(amount) * safe(rate) * months) / 100;
     }
 
     async function loadData() {
       const { data, error } = await supabase.from('loan_summary').select('*');
 
       if (error) {
-        document.body.innerHTML = "Error: " + error.message;
+        document.body.innerHTML = "❌ Error: " + error.message;
         return;
       }
 
@@ -37,21 +43,26 @@
 
       data.forEach(item => {
 
+        let name = item.borrower_name || "Unknown";
+        let date = item.loan_date || "Not set";
+        let amount = safe(item.amount);
+        let rate = safe(item.interest_rate);
+        let paid = safe(item.total_paid);
+
         let months = monthsBetween(item.loan_date);
-        let interest = calcInterest(item.amount, item.interest_rate, months);
-        let balance = item.amount + interest - (item.total_paid || 0);
+        let interest = calcInterest(amount, rate, months);
+        let balance = amount + interest - paid;
 
         html += `
           <div style="background:white;padding:12px;margin:10px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1)">
             
-            <h3>👤 ${item.borrower_name}</h3>
-            
-            <p>📅 Loan Date: ${item.loan_date}</p>
-            <p>💰 Loan Amount: ₹${item.amount}</p>
-            <p>📈 Interest Rate: ${item.interest_rate}% / month</p>
-            
+            <h3>👤 ${name}</h3>
+            <p>📅 Loan Date: ${date}</p>
+            <p>💰 Loan Amount: ₹${amount}</p>
+            <p>📈 Interest Rate: ${rate}% / month</p>
+
             <p>📊 Interest: ₹${interest.toFixed(2)}</p>
-            <p>💸 Total Paid: ₹${item.total_paid || 0}</p>
+            <p>💸 Paid: ₹${paid}</p>
 
             <hr>
 
