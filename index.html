@@ -109,7 +109,7 @@ async function load(){
   });
 
   html+="</table>";
-  document.getElementById("main").innerHTML=html;
+  document.getElementById("main").innerHTML = "<pre>" + JSON.stringify(borrowers, null, 2) + "</pre>";
 }
 
 // -------- DETAIL VIEW --------
