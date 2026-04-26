@@ -85,6 +85,7 @@ function calculate(b, rates, payments){
 // -------- LOAD TABLE --------
 async function load(){
   const {data: borrowers, error} = await supabase.from("borrowers").select("*");
+  console.log("BORROWERS:", borrowers);
   const {data: rates} = await supabase.from("rate_changes").select("*");
   const {data: payments} = await supabase.from("payments").select("*");
 
